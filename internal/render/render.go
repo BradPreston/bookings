@@ -8,8 +8,9 @@ import (
 	"net/http"
 	"path/filepath"
 
-	"github.com/bradpreston/bookings/pkg/config"
-	"github.com/bradpreston/bookings/pkg/models"
+	"github.com/bradpreston/bookings/internal/config"
+	"github.com/bradpreston/bookings/internal/models"
+	"github.com/justinas/nosurf"
 )
 
 var functions = template.FuncMap {
@@ -23,34 +24,34 @@ func NewTemplates(appConfig *config.AppConfig) {
 	app = appConfig
 }
 
-func AddDefaultData(td *models.TemplateData) *models.TemplateData {
-
+func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
+	td.CSRFToken = nosurf.Token(r)
 	return td
 }
 
 // RenderTemplate renders templates using html engine
-func RenderTemplate(responseWriter http.ResponseWriter, html string, td *models.TemplateData) {
-	var templateCache map[string]*template.Template
+func RenderTemplate(w http.ResponseWriter, r *http.Request, html string, td *models.TemplateData) {
+	var tc map[string]*template.Template
 
 	if app.UseCache {
 		// get the template cache from app config
-		templateCache = app.TemplateCache
+		tc = app.TemplateCache
 	} else {
-		templateCache, _ = CreateTemplateCache()
+		tc, _ = CreateTemplateCache()
 	}
 
-	template, ok := templateCache[html]
+	template, ok := tc[html]
 	if !ok {
 		log.Fatal("could not get template from template cache")
 	}
 
 	buffer := new(bytes.Buffer)
 
-	td = AddDefaultData(td)
+	td = AddDefaultData(td, r)
 
 	_ = template.Execute(buffer, td)
 
-	_, err := buffer.WriteTo(responseWriter)
+	_, err := buffer.WriteTo(w)
 	if err != nil {
 		fmt.Println("error writing template to browswer:", err)
 	}
