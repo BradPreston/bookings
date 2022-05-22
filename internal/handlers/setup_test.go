@@ -37,7 +37,7 @@ func getRoutes() http.Handler {
 	
 		app.Session = session
 	
-		tc, err := render.CreateTemplateCache()
+		tc, err := CreateTestTemplateCache()
 		if err != nil {
 			log.Fatal("cannot create template cache")
 		}
@@ -52,7 +52,7 @@ func getRoutes() http.Handler {
 		mux := chi.NewRouter()
 
 	mux.Use(middleware.Recoverer)
-	mux.Use(NoSurf)
+	// mux.Use(NoSurf)
 	mux.Use(SessionLoad)
 
 	mux.Get("/", Repo.Home)
