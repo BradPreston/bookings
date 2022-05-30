@@ -1,1 +1,7 @@
 .idea
+database.yml
+bookings
+run.sh
+.DS_Store
+coverage.out
+*.code-workspace
