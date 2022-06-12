@@ -34,6 +34,8 @@
 {{define "js"}}
 <script>
   const elem = document.getElementById('reservation-dates');
-  const rangepicker = new DateRangePicker(elem, {});
+  const rangepicker = new DateRangePicker(elem, {
+    format: "mm-dd-yyyy"
+  });
 </script>
 {{end}}
