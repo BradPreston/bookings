@@ -1,10 +1,12 @@
 mode: set
-github.com/bradpreston/bookings/cmd/web/main.go:23.13,25.16 2 0
-github.com/bradpreston/bookings/cmd/web/main.go:30.2,37.16 4 0
-github.com/bradpreston/bookings/cmd/web/main.go:25.16,27.3 1 0
-github.com/bradpreston/bookings/cmd/web/main.go:40.18,56.16 10 1
-github.com/bradpreston/bookings/cmd/web/main.go:61.2,68.12 6 1
-github.com/bradpreston/bookings/cmd/web/main.go:56.16,59.3 2 0
+github.com/bradpreston/bookings/cmd/web/main.go:28.13,30.16 2 0
+github.com/bradpreston/bookings/cmd/web/main.go:33.2,43.16 5 0
+github.com/bradpreston/bookings/cmd/web/main.go:30.16,32.3 1 0
+github.com/bradpreston/bookings/cmd/web/main.go:46.32,73.16 18 1
+github.com/bradpreston/bookings/cmd/web/main.go:76.2,79.16 3 1
+github.com/bradpreston/bookings/cmd/web/main.go:84.2,92.16 7 1
+github.com/bradpreston/bookings/cmd/web/main.go:73.16,75.3 1 0
+github.com/bradpreston/bookings/cmd/web/main.go:79.16,82.3 2 0
 github.com/bradpreston/bookings/cmd/web/middleware.go:10.45,21.2 3 1
 github.com/bradpreston/bookings/cmd/web/middleware.go:24.50,26.2 1 1
-github.com/bradpreston/bookings/cmd/web/routes.go:13.49,39.2 18 1
+github.com/bradpreston/bookings/cmd/web/routes.go:13.49,40.2 19 1
