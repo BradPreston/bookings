@@ -2,10 +2,10 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/bradpreston/bookings/internal/config"
@@ -16,7 +16,6 @@ import (
 	"github.com/bradpreston/bookings/internal/render"
 	"github.com/bradpreston/bookings/internal/repository"
 	"github.com/bradpreston/bookings/internal/repository/dbrepo"
-	"github.com/go-chi/chi"
 )
 
 // Repo the repository used by the handlers
@@ -130,16 +129,74 @@ type jsonResponse struct {
 
 // AvailabilityJSON handles request for availability and send JSON response
 func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
+	err := r.ParseForm()
+	if err != nil {
+		resp := jsonResponse{
+			OK: false,
+			Message: "Internal server error",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
+
 	sd := r.Form.Get("start")
 	ed := r.Form.Get("end")
 	layout := "01/02/2006"
 
-	startDate, _ := time.Parse(layout, sd)
-	endDate, _ := time.Parse(layout, ed)
-	roomID, _ := strconv.Atoi(r.Form.Get("room_id"))
+	startDate, err := time.Parse(layout, sd)
+	if err != nil {
+		resp := jsonResponse{
+			OK: false,
+			Message: "could not parse the start date",
+		}
 
-	available, _ := m.DB.SearchAvailabilityByDatesByRoomID(startDate, endDate, roomID)
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
 
+	endDate, err := time.Parse(layout, ed)
+	if err != nil {
+		resp := jsonResponse{
+			OK: false,
+			Message: "could not parse the end date",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
+
+	roomID, err := strconv.Atoi(r.Form.Get("room_id"))
+	if err != nil {
+		resp := jsonResponse{
+			OK: false,
+			Message: "invalid room id",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
+
+	available, err := m.DB.SearchAvailabilityByDatesByRoomID(startDate, endDate, roomID)
+	if err != nil {
+		resp := jsonResponse{
+			OK: false,
+			Message: "Error connecting to database",
+		}
+
+		out, _ := json.MarshalIndent(resp, "", "    ")
+		w.Header().Set("Content-Type", "application/json")
+		w.Write(out)
+		return
+	}
 	resp := jsonResponse{
 		OK: available,
 		Message: "",
@@ -147,12 +204,7 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 		EndDate: ed,
 		RoomID: strconv.Itoa(roomID),
 	}
-
-	out, err := json.MarshalIndent(resp, "", "     ")
-	if err != nil {
-		helpers.ServerError(w, err)
-		return
-	}
+	out, _ := json.MarshalIndent(resp, "", "     ")
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(out)
@@ -202,12 +254,6 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 // PostReservation handles the posting of a reservation form
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
-	reservation, ok := m.App.Session.Get(r.Context(), "reservation").(models.Reservation)
-	if !ok {
-		helpers.ServerError(w, errors.New("cannot get from session"))
-		return
-	}
-
 	err := r.ParseForm()
 	if err != nil {
 		m.App.Session.Put(r.Context(), "error", "can't parse form")
@@ -240,10 +286,15 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	reservation.FirstName = r.Form.Get("first_name")
-	reservation.LastName = r.Form.Get("last_name")
-	reservation.Phone = r.Form.Get("phone")
-	reservation.Email = r.Form.Get("email")
+	reservation := models.Reservation{
+		FirstName: r.Form.Get("first_name"),
+		LastName:  r.Form.Get("last_name"),
+		Phone:     r.Form.Get("phone"),
+		Email:     r.Form.Get("email"),
+		StartDate: startDate,
+		EndDate:   endDate,
+		RoomID:    roomID,
+	}
 
 	form := forms.New(r.PostForm)
 
@@ -318,7 +369,8 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 
 // ChooseRoom displays list of available rooms
 func (m *Repository) ChooseRoom(w http.ResponseWriter, r *http.Request) {
-	roomID, err := strconv.Atoi(chi.URLParam(r, "id"))
+	exploded := strings.Split(r.RequestURI, "/")
+	roomID, err := strconv.Atoi(exploded[2])
 	if err != nil {
 		helpers.ServerError(w, err)
 		return
