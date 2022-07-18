@@ -43,6 +43,7 @@ type Reservation struct {
 	EndDate 	time.Time
 	RoomID 		int
 	Room		Room
+	Processed 	int
 }
 
 // RoomRestrictions is the room restriction model

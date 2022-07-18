@@ -7,20 +7,52 @@ import (
 	"html/template"
 	"net/http"
 	"path/filepath"
+	"time"
 
 	"github.com/bradpreston/bookings/internal/config"
 	"github.com/bradpreston/bookings/internal/models"
 	"github.com/justinas/nosurf"
 )
 
-var functions = template.FuncMap {}
+var functions = template.FuncMap {
+	"humanDate": HumanDate,
+	"formatDate": FormatDate,
+	"iterate": Iterate,
+	"add": Add,
+}
 
 var app *config.AppConfig
 var pathToTemplates = "./templates"
 
+// Iterate returns a slice of ints starting at 1, going to count
+func Iterate(count int) []int {
+	var i int
+	var items []int
+
+	for i = 0; i < count; i++ {
+		items = append(items, i)
+	}
+
+	return items
+}
+
+//Add adds two integers together
+func Add(a, b int) int {
+	return a + b
+}
+
 // NewRenderer sets the config for the template package
 func NewRenderer(appConfig *config.AppConfig) {
 	app = appConfig
+}
+
+// HumanDate returns time in MM-DD-YYY format
+func HumanDate(t time.Time) string {
+	return t.Format("01/02/2006")
+}
+
+func FormatDate(t time.Time, f string) string {
+	return t.Format(f)
 }
 
 func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
